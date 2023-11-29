@@ -1,0 +1,161 @@
+Criei uma entidade "Prato":
+
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+
+@Entity
+public class Prato {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private String nome;
+    private String ingredientes;
+    private String tipo;
+
+    // Getters e setters
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getNome() {
+        return nome;
+    }
+
+    public void setNome(String nome) {
+        this.nome = nome;
+    }
+
+    public String getIngredientes() {
+        return ingredientes;
+    }
+
+    public void setIngredientes(String ingredientes) {
+        this.ingredientes = ingredientes;
+    }
+
+    public String getTipo() {
+        return tipo;
+    }
+
+    public void setTipo(String tipo) {
+        this.tipo = tipo;
+    }
+}
+
+
+
+Criei um repositório para a entidade "Prato":
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface PratoRepository extends JpaRepository<Prato, Long> {
+}
+
+
+
+Criei um serviço para realizar operações CRUD:
+
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Optional;
+
+@Service
+public class PratoService {
+
+    @Autowired
+    private PratoRepository pratoRepository;
+
+    public List<Prato> listarPratos() {
+        return pratoRepository.findAll();
+    }
+
+    public Optional<Prato> obterPratoPorId(Long id) {
+        return pratoRepository.findById(id);
+    }
+
+    public Prato salvarPrato(Prato prato) {
+        return pratoRepository.save(prato);
+    }
+
+    public void deletarPrato(Long id) {
+        pratoRepository.deleteById(id);
+    }
+}
+
+
+Criei um controlador para manipular as requisições HTTP:
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Optional;
+
+@RestController
+@RequestMapping("/pratos")
+public class PratoController {
+
+    @Autowired
+    private PratoService pratoService;
+
+    @GetMapping
+    public List<Prato> listarPratos() {
+        return pratoService.listarPratos();
+    }
+
+    @GetMapping("/{id}")
+    public Optional<Prato> obterPratoPorId(@PathVariable Long id) {
+        return pratoService.obterPratoPorId(id);
+    }
+
+    @PostMapping
+    public Prato salvarPrato(@RequestBody Prato prato) {
+        return pratoService.salvarPrato(prato);
+    }
+
+    @PutMapping("/{id}")
+    public Prato atualizarPrato(@PathVariable Long id, @RequestBody Prato pratoAtualizado) {
+        Optional<Prato> pratoExistente = pratoService.obterPratoPorId(id);
+        if (pratoExistente.isPresent()) {
+            Prato prato = pratoExistente.get();
+            prato.setNome(pratoAtualizado.getNome());
+            prato.setIngredientes(pratoAtualizado.getIngredientes());
+            prato.setTipo(pratoAtualizado.getTipo());
+            return pratoService.salvarPrato(prato);
+        } else {
+            // Lida com o caso em que o prato não existe
+            return null;
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public void deletarPrato(@PathVariable Long id) {
+        pratoService.deletarPrato(id);
+    }
+}
+
+
+Configurei a aplicação Spring Boot:
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class MinhaAppApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(MinhaAppApplication.class, args);
+    }
+}
